@@ -7,8 +7,6 @@ import time
 import streamlit as st
 import requests
 
-# OpenAI API Key 설정
-openai.api_key = "sk-VEeUuMyarMIAG9l0tiRBN751xT4feVWBy6pGuvWgzKT3BlbkFJPTu-muMFjWytZ0qHPt3MzwMUbli95oqlAQLisTlGcA"
 
 # Flask 앱 생성
 app = Flask(__name__)
