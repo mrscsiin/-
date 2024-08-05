@@ -9,9 +9,11 @@ import requests
 
 # OpenAI API Key 설정
 openai.api_key = "sk-VEeUuMyarMIAG9l0tiRBN751xT4feVWBy6pGuvWgzKT3BlbkFJPTu-muMFjWytZ0qHPt3MzwMUbli95oqlAQLisTlGcA"
+
 # Flask 앱 생성
 app = Flask(__name__)
 CORS(app)  # CORS 설정을 통해 다른 도메인에서 접근 허용
+app.secret_key = os.urandom(24)
 
 # Flask에서 사용할 프로ンプ트
 prompt = """
@@ -139,84 +141,17 @@ def streamlit_app():
         st.text_area("Transcription Result", value=transcription)
         st.session_state.transcription_text = ""
 
+def run_flask():
+    app.run(port=5000, threaded=True)
+
+def run_streamlit():
+    st.write("Streamlit 앱이 실행됩니다. 브라우저에서 http://localhost:8501 확인하세요.")
+    streamlit_app()
+
 if __name__ == "__main__":
-    from flask import Flask, render_template, request, jsonify, session
-    from flask_cors import CORS
-    import threading
-    import streamlit as st
-    import requests
-    import openai
-    import os
+    flask_thread = threading.Thread(target=run_flask)
+    streamlit_thread = threading.Thread(target=run_streamlit)
 
-    openai.api_key = "YOUR_OPENAI_API_KEY"
-    
-    # Flask 앱 생성 및 설정
-    app = Flask(__name__)
-    CORS(app)  # CORS 설정을 통해 다른 도메인에서 접근 허용
-    app.secret_key = os.urandom(24)
-
-    @app.route('/', methods=['GET', 'POST'])
-    def index():
-        if 'messages' not in session:
-            session['messages'] = [{"role": "system", "content": prompt}]
-
-        user_input = None
-        response = None
-        if request.method == 'POST':
-            user_input = request.form['message']
-            session['messages'].append({"role": "user", "content": user_input})
-            response = chat(session['messages'])
-            session['messages'].append({"role": "assistant", "content": response})
-
-        return render_template('index.html', user_input=user_input, response=response, chat_history=session['messages'])
-
-    @app.route('/transcribe', methods=['POST'])
-    def transcribe_audio():
-        if 'audio_file' not in request.files:
-            return jsonify({"error": "No audio file provided"}), 400
-
-        audio_file = request.files['audio_file']
-        if audio_file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
-        try:
-            file_name = "tmp_audio_file.wav"
-            audio_file.save(file_name)
-
-            with open(file_name, "rb") as f:
-                transcription = openai.Audio.transcribe("whisper-1", f, language="ko")
-
-            text = transcription['text']
-        except Exception as e:
-            print(e)
-            text = f"음성인식에서 실패했습니다. {e}"
-        finally:
-            if os.path.exists(file_name):
-                os.remove(file_name)
-
-        return jsonify({"text": text})
-
-    def chat(messages):
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=messages
-        )
-        return response.choices[0].message['content']
-
-    # Flask 서버를 실행하는 스레드
-    def run_flask():
-        app.run(port=5000, debug=True)
-
-    # Streamlit 앱을 실행하는 함수
-    def run_streamlit():
-        st.write("Streamlit 앱이 실행됩니다. 브라우저에서 http://localhost:8501 확인하세요.")
-        streamlit_app()
-
-    # Flask와 Streamlit을 각각 스레드에서 실행
-    if __name__ == "__main__":
-        flask_thread = threading.Thread(target=run_flask)
-        streamlit_thread = threading.Thread(target=run_streamlit)
-
-        flask_thread.start()
-        time.sleep(2)  # Flask 서버가 시작될 때까지 대기
-        streamlit_thread.start()
+    flask_thread.start()
+    time.sleep(2)  # Flask 서버가 시작될 때까지 대기
+    streamlit_thread.start()
