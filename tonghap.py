@@ -8,8 +8,7 @@ import streamlit as st
 import requests
 
 # OpenAI API Key 설정
-openai.api_key = "YOUR_OPENAI_API_KEY"
-
+openai.api_key = "sk-VEeUuMyarMIAG9l0tiRBN751xT4feVWBy6pGuvWgzKT3BlbkFJPTu-muMFjWytZ0qHPt3MzwMUbli95oqlAQLisTlGcA"
 # Flask 앱 생성
 app = Flask(__name__)
 CORS(app)  # CORS 설정을 통해 다른 도메인에서 접근 허용
